@@ -1,6 +1,6 @@
 import pygame, sys
 import numpy
-pygame.init
+pygame.init()
 
 #Initializing screen & images
 screen = pygame.display.set_mode((600, 600))
@@ -70,17 +70,32 @@ def check_win(player):
     
     return False
 
+#Restarting game
+font = pygame.font.SysFont('athelas', 40)
+FONT_COLOR = (0, 84, 148) 
+def draw_restart_button(player):
+    winner = None
+    if player == 1: winner = 'Sandwich'
+    elif player == 2: winner = 'Apple'
+    
+    pygame.draw.rect(screen, (207, 238, 255), (125, 180, 350, 255))
+    line1 = font.render(winner + ' wins!', True, FONT_COLOR)
+    line2 = font.render('Press r to restart', True, FONT_COLOR)
+    screen.blit(line1, (170, 250))
+    screen.blit(line2, (170, 320))
+
+def restart():
+    for row in range(3):
+        for col in range (3):
+            board[row][col] = 0    
+
 WIN_LINE_COLOR = (0, 118, 209)
 DIAG_LINE_WIDTH = 23
 def draw_horiz_win(row):
     pygame.draw.line(screen, WIN_LINE_COLOR, (20, row * 200 + 100), (580, row * 200 + 100), LINE_WIDTH)
-    pygame.draw.circle(screen, WIN_LINE_COLOR, (20, row * 200 + 101), LINE_WIDTH // 2) #circles are to make line rounded
-    pygame.draw.circle(screen, WIN_LINE_COLOR, (580, row * 200 + 101), LINE_WIDTH // 2)
 
 def draw_vert_win(col):
     pygame.draw.line(screen, WIN_LINE_COLOR, (col * 200 + 100, 20), (col * 200 + 100, 580), LINE_WIDTH)
-    pygame.draw.circle(screen, WIN_LINE_COLOR, (col * 200 + 101, 20), LINE_WIDTH // 2)
-    pygame.draw.circle(screen, WIN_LINE_COLOR, (col * 200 + 101, 580), LINE_WIDTH // 2)
 
 def draw_asc_diagonal_win(): #for when the player win looks like /
     pygame.draw.line(screen, WIN_LINE_COLOR, (20, 580), (580, 20), DIAG_LINE_WIDTH)
@@ -88,8 +103,9 @@ def draw_asc_diagonal_win(): #for when the player win looks like /
 def draw_desc_diagonal_win(): #for when the player win looks like \
     pygame.draw.line(screen, WIN_LINE_COLOR, (20, 20), (580, 580), DIAG_LINE_WIDTH)
 
-player = 1 #change to random?
+player = 1
 running = True
+game_over = False
 while running:
     for event in pygame.event.get():
         #Setting background
@@ -97,21 +113,33 @@ while running:
         draw_lines()
         draw_icons()  
         check_win(1)
+        if check_win(1) and game_over: draw_restart_button(1)
         check_win(2)
+        if check_win(2) and game_over: draw_restart_button(2)
         pygame.display.update()
        
         if event.type == pygame.QUIT:
             running = False
             
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
             clicked_row = int(event.pos[1] // 200)
             clicked_col = int(event.pos[0] // 200)
             
             if available_square(clicked_row, clicked_col):
                 if player == 1:
                     mark_square(clicked_row, clicked_col, 1)
+                    if check_win(player): 
+                        game_over = True
                     player = 2
                 elif player == 2:
                     mark_square(clicked_row, clicked_col, 2)
-                    player = 1         
+                    if check_win(player): 
+                        game_over = True
+                    player = 1 
+                    
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r:
+                game_over = False
+                player = 1
+                restart()   
 pygame.quit()
