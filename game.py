@@ -38,7 +38,7 @@ def mark_square(row, col, player):
 def available_square(row, col):
     return board[row][col] == 0
 
-def is_board_full(): #used for checking for a tie
+def board_full(): #used for checking for a tie
     for row in board:
         for elem in row:
             if elem == 0: return False
@@ -74,12 +74,13 @@ def check_win(player):
 font = pygame.font.SysFont('athelas', 40)
 FONT_COLOR = (0, 84, 148) 
 def draw_restart_button(player):
-    winner = None
-    if player == 1: winner = 'Sandwich'
-    elif player == 2: winner = 'Apple'
+    message = None
+    if player == 0: message = 'It\'s a tie!'
+    elif player == 1: message = 'Sandwich wins!'
+    elif player == 2: message = 'Apple wins!'
     
     pygame.draw.rect(screen, (207, 238, 255), (125, 180, 350, 255))
-    line1 = font.render(winner + ' wins!', True, FONT_COLOR)
+    line1 = font.render(message, True, FONT_COLOR)
     line2 = font.render('Press r to restart', True, FONT_COLOR)
     screen.blit(line1, (170, 250))
     screen.blit(line2, (170, 320))
@@ -116,6 +117,7 @@ while running:
         if check_win(1) and game_over: draw_restart_button(1)
         check_win(2)
         if check_win(2) and game_over: draw_restart_button(2)
+        if board_full() and not check_win(1) and not check_win(2): draw_restart_button(0) #if there is a tie
         pygame.display.update()
        
         if event.type == pygame.QUIT:
