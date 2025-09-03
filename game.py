@@ -2,14 +2,23 @@ import pygame, sys
 import numpy
 pygame.init()
 
-#Initializing screen & images
+#Screen
 screen = pygame.display.set_mode((600, 600))
 pygame.display.set_caption("Picnic Tac Toe")
+
+#Backround & icons
 background = pygame.image.load('picnicblanket.jpg')
 sandwich = pygame.image.load('sandwich.png')
 sandwich = pygame.transform.scale(sandwich, (180,180))
 apple = pygame.image.load('apple.webp')
 apple = pygame.transform.scale(apple, (160, 160))
+
+#Sound effects & background music
+pop = pygame.mixer.Sound('pop.wav')
+click = pygame.mixer.Sound('click.wav')
+win = pygame.mixer.Sound('bell.wav')
+pygame.mixer.music.load('chill_guitar.mp3')
+pygame.mixer.music.play(-1)
 
 #Board lines
 LINE_COLOR = (121, 71, 6)
@@ -29,7 +38,7 @@ def draw_icons():
             if board[row][col] == 1: screen.blit(sandwich, (200 * col + 10, 200 * row + 10))
             elif board[row][col] == 2: screen.blit(apple, (200 * col + 20, 200 * row + 20))
 
-#Representation of board & playing game
+#Representation of board & functions for playing game
 board = numpy.zeros((3, 3)) # 0 = empty cell, 1 = player 1, 2 = player 2
 
 def mark_square(row, col, player):
@@ -44,7 +53,9 @@ def board_full(): #used for checking for a tie
             if elem == 0: return False
     return True
 
-#Winning
+
+
+#Checking for win
 def check_win(player):
     #Horizontal win check
     for row in range(3):
@@ -80,6 +91,7 @@ def draw_restart_button(player):
     elif player == 2: message = 'Apple wins!'
     
     pygame.draw.rect(screen, (207, 238, 255), (125, 180, 350, 255))
+    pygame.draw.rect(screen, (0, 84, 148), (125, 180, 350, 255), 10)
     line1 = font.render(message, True, FONT_COLOR)
     line2 = font.render('Press r to restart', True, FONT_COLOR)
     screen.blit(line1, (170, 250))
@@ -104,6 +116,7 @@ def draw_asc_diagonal_win(): #for when the player win looks like /
 def draw_desc_diagonal_win(): #for when the player win looks like \
     pygame.draw.line(screen, WIN_LINE_COLOR, (20, 20), (580, 580), DIAG_LINE_WIDTH)
 
+#Main game loop
 player = 1
 running = True
 game_over = False
@@ -128,19 +141,16 @@ while running:
             clicked_col = int(event.pos[0] // 200)
             
             if available_square(clicked_row, clicked_col):
-                if player == 1:
-                    mark_square(clicked_row, clicked_col, 1)
-                    if check_win(player): 
-                        game_over = True
-                    player = 2
-                elif player == 2:
-                    mark_square(clicked_row, clicked_col, 2)
-                    if check_win(player): 
-                        game_over = True
-                    player = 1 
+                mark_square(clicked_row, clicked_col, player)
+                pop.play()
+                if check_win(player):
+                    win.play()
+                    game_over = True
+                player = 3 - player
                     
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
+                click.play()
                 game_over = False
                 player = 1
                 restart()   
