@@ -2,20 +2,24 @@ import pygame, numpy
 pygame.init()
 
 #Constants
-GAME_WIDTH = 600
-GAME_HEIGHT = 600
+GAME_WIDTH = 700
+GAME_HEIGHT = 700
+BOX_SIZE = GAME_WIDTH//3
 LINE_COLOR = (121, 71, 6)
 LINE_WIDTH = 18
 FONT_COLOR = (0, 84, 148) 
 WIN_LINE_COLOR = (0, 118, 209)
 DIAG_LINE_WIDTH = 23
+MESSAGE_COLOR = (207, 238, 255)
+MESSAGE_BORDER_COLOR = (0, 84, 148)
 
 #Screen
 screen = pygame.display.set_mode((GAME_WIDTH, GAME_HEIGHT))
 pygame.display.set_caption('Picnic Tac Toe')
 
 #Background & icons
-background = pygame.image.load('picnicblanket.jpg')
+background = pygame.image.load('redblanket.jpg')
+background = pygame.transform.scale(background, (GAME_WIDTH, GAME_HEIGHT))
 sandwich = pygame.image.load('sandwich.png')
 sandwich = pygame.transform.scale(sandwich, (180,180))
 apple = pygame.image.load('apple.webp')
@@ -30,10 +34,10 @@ pygame.mixer.music.play(-1)
 
 #Board lines
 def draw_lines():
-    pygame.draw.line(screen, LINE_COLOR, (0, 200), (600, 200), LINE_WIDTH)
-    pygame.draw.line(screen, LINE_COLOR, (0, 400), (600, 400), LINE_WIDTH)
-    pygame.draw.line(screen, LINE_COLOR, (200, 0), (200, 600), LINE_WIDTH)
-    pygame.draw.line(screen, LINE_COLOR, (400, 0), (400, 600), LINE_WIDTH)   
+    pygame.draw.line(screen, LINE_COLOR, (0, BOX_SIZE), (GAME_WIDTH, BOX_SIZE), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOR, (0, BOX_SIZE*2), (GAME_WIDTH, BOX_SIZE*2), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOR, (BOX_SIZE, 0), (BOX_SIZE, GAME_HEIGHT), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOR, (BOX_SIZE*2, 0), (BOX_SIZE*2, GAME_HEIGHT), LINE_WIDTH)   
 
 #Representation of board & functions for playing game
 board = numpy.zeros((3, 3)) #0 = empty cell, 1 = player 1, 2 = player 2
@@ -49,23 +53,23 @@ def check_win(player):
     #Horizontal
     for row in range(3):
         if board[row][0] == player and board[row][1] == player and board[row][2] == player:
-            pygame.draw.line(screen, WIN_LINE_COLOR, (20, row * 200 + 100), (580, row * 200 + 100), LINE_WIDTH)
+            pygame.draw.line(screen, WIN_LINE_COLOR, (20, row * BOX_SIZE + 100), (GAME_WIDTH-20, row * BOX_SIZE + 100), LINE_WIDTH)
             return True
 
     #Vertical
     for col in range(3):
         if board[0][col] == player and board[1][col] == player and board[2][col] == player:
-            pygame.draw.line(screen, WIN_LINE_COLOR, (col * 200 + 100, 20), (col * 200 + 100, 580), LINE_WIDTH)
+            pygame.draw.line(screen, WIN_LINE_COLOR, (col * BOX_SIZE + 100, 20), (col * BOX_SIZE + 100, GAME_HEIGHT-20), LINE_WIDTH)
             return True
     
     #Ascending diagonal (looks like / )
     if board[2][0] == player and board[1][1] == player and board[0][2] == player:
-        pygame.draw.line(screen, WIN_LINE_COLOR, (20, 580), (580, 20), DIAG_LINE_WIDTH)
+        pygame.draw.line(screen, WIN_LINE_COLOR, (20, GAME_HEIGHT-20), (GAME_WIDTH-20, 20), DIAG_LINE_WIDTH)
         return True
     
     #Descending diagonal (looks like \ )
     if board[0][0] == player and board[1][1] == player and board[2][2] == player:
-        pygame.draw.line(screen, WIN_LINE_COLOR, (20, 20), (580, 580), DIAG_LINE_WIDTH)
+        pygame.draw.line(screen, WIN_LINE_COLOR, (20, 20), (GAME_WIDTH-20, GAME_HEIGHT-20), DIAG_LINE_WIDTH)
         return True
     
     return False
@@ -78,12 +82,12 @@ def draw_restart_button(player):
     elif player == 1: message = 'Sandwich wins!'
     elif player == 2: message = 'Apple wins!'
     
-    pygame.draw.rect(screen, (207, 238, 255), (125, 180, 350, 255))
-    pygame.draw.rect(screen, (0, 84, 148), (125, 180, 350, 255), 10)
+    pygame.draw.rect(screen, MESSAGE_COLOR, (BOX_SIZE-75, BOX_SIZE-30, BOX_SIZE+150, BOX_SIZE+60))
+    pygame.draw.rect(screen, MESSAGE_BORDER_COLOR, (BOX_SIZE-75, BOX_SIZE-30, BOX_SIZE+150, BOX_SIZE+60), 10)
     line1 = font.render(message, True, FONT_COLOR)
     line2 = font.render('Press r to restart', True, FONT_COLOR)
-    screen.blit(line1, (170, 250))
-    screen.blit(line2, (170, 320))
+    screen.blit(line1, (BOX_SIZE-20, BOX_SIZE+50))
+    screen.blit(line2, (BOX_SIZE-20, BOX_SIZE+120))
 
 def reset_board():
     for row in range(3):
@@ -99,8 +103,8 @@ def update_display():
     #Drawing current apple & sandwich icons
     for row in range(3):
         for col in range(3):
-            if board[row][col] == 1: screen.blit(sandwich, (200 * col + 10, 200 * row + 10))
-            elif board[row][col] == 2: screen.blit(apple, (200 * col + 20, 200 * row + 20))
+            if board[row][col] == 1: screen.blit(sandwich, (BOX_SIZE * col + 20, BOX_SIZE * row + 20))
+            elif board[row][col] == 2: screen.blit(apple, (BOX_SIZE * col + 30, BOX_SIZE * row + 30))
     
     #Did player 1 win?       
     check_win(1)
@@ -131,8 +135,8 @@ while running:
             running = False
             
         if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
-            clicked_row = int(event.pos[1] // 200)
-            clicked_col = int(event.pos[0] // 200)
+            clicked_row = int(event.pos[1] // BOX_SIZE)
+            clicked_col = int(event.pos[0] // BOX_SIZE)
             
             if available_square(clicked_row, clicked_col):
                 mark_square(clicked_row, clicked_col, player)
