@@ -23,8 +23,10 @@ background = pygame.image.load('redblanket.jpg')
 background = pygame.transform.scale(background, (GAME_WIDTH, GAME_HEIGHT))
 sandwich = pygame.image.load('sandwich.png')
 sandwich = pygame.transform.scale(sandwich, (180,180))
+mini_sandwich = pygame.transform.scale(sandwich, (75,75))
 apple = pygame.image.load('apple.webp')
 apple = pygame.transform.scale(apple, (160, 160))
+mini_apple = pygame.transform.scale(apple, (70, 70))
 
 #Sound effects & background music
 pop = pygame.mixer.Sound('pop.wav')
@@ -108,7 +110,7 @@ def reset_board():
             board[row][col] = 0    
     
 #Updating display
-def update_display():
+def update_display(player):
     #Setting background
     screen.blit(background, (0,0))
     draw_lines()
@@ -119,6 +121,12 @@ def update_display():
         for col in range(3):
             if board[row][col] == 1: screen.blit(sandwich, (BOX_SIZE * col + 20, BOX_SIZE * row + COUNTER_HEIGHT + 20))
             elif board[row][col] == 2: screen.blit(apple, (BOX_SIZE * col + 30, BOX_SIZE * row + COUNTER_HEIGHT + 30))
+    
+    #Icon for current turn
+    if player == 1:
+        screen.blit(mini_sandwich, (GAME_WIDTH//2-40, 10))
+    elif player == 2:
+        screen.blit(mini_apple, (GAME_WIDTH//2-40, 10))
     
     #Did player 1 win?       
     check_win(1)
@@ -143,7 +151,7 @@ running = True
 game_over = False
 while running:
     for event in pygame.event.get():
-        update_display()
+        update_display(player)
        
         if event.type == pygame.QUIT:
             running = False
@@ -166,6 +174,5 @@ while running:
             if event.key == pygame.K_r:
                 click.play()
                 game_over = False
-                #player = 1
                 reset_board()   
 pygame.quit()
