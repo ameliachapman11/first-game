@@ -3,7 +3,8 @@ pygame.init()
 
 #Constants
 GAME_WIDTH = 700
-GAME_HEIGHT = 700
+COUNTER_HEIGHT = 100
+GAME_HEIGHT = GAME_WIDTH + COUNTER_HEIGHT
 BOX_SIZE = GAME_WIDTH//3
 LINE_COLOR = (121, 71, 6)
 LINE_WIDTH = 18
@@ -34,10 +35,23 @@ pygame.mixer.music.play(-1)
 
 #Board lines
 def draw_lines():
-    pygame.draw.line(screen, LINE_COLOR, (0, BOX_SIZE), (GAME_WIDTH, BOX_SIZE), LINE_WIDTH)
-    pygame.draw.line(screen, LINE_COLOR, (0, BOX_SIZE*2), (GAME_WIDTH, BOX_SIZE*2), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOR, (0, BOX_SIZE + COUNTER_HEIGHT), (GAME_WIDTH, BOX_SIZE + COUNTER_HEIGHT), LINE_WIDTH)
+    pygame.draw.line(screen, LINE_COLOR, (0, BOX_SIZE*2 + COUNTER_HEIGHT), (GAME_WIDTH, BOX_SIZE*2 + COUNTER_HEIGHT), LINE_WIDTH)
     pygame.draw.line(screen, LINE_COLOR, (BOX_SIZE, 0), (BOX_SIZE, GAME_HEIGHT), LINE_WIDTH)
-    pygame.draw.line(screen, LINE_COLOR, (BOX_SIZE*2, 0), (BOX_SIZE*2, GAME_HEIGHT), LINE_WIDTH)   
+    pygame.draw.line(screen, LINE_COLOR, (BOX_SIZE*2, 0), (BOX_SIZE*2, GAME_HEIGHT), LINE_WIDTH)
+    
+#Win counter
+player1_wins = 0
+player2_wins = 0
+counter_font = pygame.font.SysFont('athelas', 30)
+def draw_counter():
+    pygame.draw.rect(screen, MESSAGE_COLOR, (0, 0, GAME_WIDTH, 100)) 
+    pygame.draw.line(screen, MESSAGE_BORDER_COLOR, (0, COUNTER_HEIGHT), (GAME_WIDTH, COUNTER_HEIGHT), LINE_WIDTH) 
+    
+    line1 = counter_font.render('Player 1 wins: ' + str(player1_wins), True, FONT_COLOR)
+    line2 = counter_font.render('Player 2 wins: ' + str(player2_wins), True, FONT_COLOR)
+    screen.blit(line1, (20, COUNTER_HEIGHT//4)) 
+    screen.blit(line2, (480, COUNTER_HEIGHT//4))
 
 #Representation of board & functions for playing game
 board = numpy.zeros((3, 3)) #0 = empty cell, 1 = player 1, 2 = player 2
@@ -53,41 +67,40 @@ def check_win(player):
     #Horizontal
     for row in range(3):
         if board[row][0] == player and board[row][1] == player and board[row][2] == player:
-            pygame.draw.line(screen, WIN_LINE_COLOR, (20, row * BOX_SIZE + 100), (GAME_WIDTH-20, row * BOX_SIZE + 100), LINE_WIDTH)
+            pygame.draw.line(screen, WIN_LINE_COLOR, (20, row * BOX_SIZE + COUNTER_HEIGHT + BOX_SIZE//2), (GAME_WIDTH-20, row * BOX_SIZE + COUNTER_HEIGHT + BOX_SIZE//2), LINE_WIDTH)
             return True
 
     #Vertical
     for col in range(3):
         if board[0][col] == player and board[1][col] == player and board[2][col] == player:
-            pygame.draw.line(screen, WIN_LINE_COLOR, (col * BOX_SIZE + 100, 20), (col * BOX_SIZE + 100, GAME_HEIGHT-20), LINE_WIDTH)
+            pygame.draw.line(screen, WIN_LINE_COLOR, (col * BOX_SIZE + BOX_SIZE//2, COUNTER_HEIGHT + 20), (col * BOX_SIZE + BOX_SIZE//2, GAME_HEIGHT-20), LINE_WIDTH)
             return True
     
     #Ascending diagonal (looks like / )
     if board[2][0] == player and board[1][1] == player and board[0][2] == player:
-        pygame.draw.line(screen, WIN_LINE_COLOR, (20, GAME_HEIGHT-20), (GAME_WIDTH-20, 20), DIAG_LINE_WIDTH)
+        pygame.draw.line(screen, WIN_LINE_COLOR, (20, GAME_HEIGHT-20), (GAME_WIDTH-20, COUNTER_HEIGHT + 20), DIAG_LINE_WIDTH)
         return True
     
     #Descending diagonal (looks like \ )
     if board[0][0] == player and board[1][1] == player and board[2][2] == player:
-        pygame.draw.line(screen, WIN_LINE_COLOR, (20, 20), (GAME_WIDTH-20, GAME_HEIGHT-20), DIAG_LINE_WIDTH)
+        pygame.draw.line(screen, WIN_LINE_COLOR, (20, 20 + COUNTER_HEIGHT), (GAME_WIDTH-20, GAME_HEIGHT-20), DIAG_LINE_WIDTH)
         return True
     
     return False
 
 #Restarting game
-font = pygame.font.SysFont('athelas', 40)
+restart_font = pygame.font.SysFont('athelas', 40)
 def draw_restart_button(player):
     message = None
     if player == 0: message = 'It\'s a tie!'
-    elif player == 1: message = 'Sandwich wins!'
-    elif player == 2: message = 'Apple wins!'
+    else: message = 'Player ' + str(player) + ' wins!'
     
-    pygame.draw.rect(screen, MESSAGE_COLOR, (BOX_SIZE-75, BOX_SIZE-30, BOX_SIZE+150, BOX_SIZE+60))
-    pygame.draw.rect(screen, MESSAGE_BORDER_COLOR, (BOX_SIZE-75, BOX_SIZE-30, BOX_SIZE+150, BOX_SIZE+60), 10)
-    line1 = font.render(message, True, FONT_COLOR)
-    line2 = font.render('Press r to restart', True, FONT_COLOR)
-    screen.blit(line1, (BOX_SIZE-20, BOX_SIZE+50))
-    screen.blit(line2, (BOX_SIZE-20, BOX_SIZE+120))
+    pygame.draw.rect(screen, MESSAGE_COLOR, (BOX_SIZE-75, BOX_SIZE+COUNTER_HEIGHT-30, BOX_SIZE+150, BOX_SIZE+60))
+    pygame.draw.rect(screen, MESSAGE_BORDER_COLOR, (BOX_SIZE-75, BOX_SIZE+COUNTER_HEIGHT-30, BOX_SIZE+150, BOX_SIZE+60), 10)
+    line1 = restart_font.render(message, True, FONT_COLOR)
+    line2 = restart_font.render('Press r to restart', True, FONT_COLOR)
+    screen.blit(line1, (BOX_SIZE, BOX_SIZE+COUNTER_HEIGHT+50))
+    screen.blit(line2, (BOX_SIZE-20, BOX_SIZE+COUNTER_HEIGHT+120))
 
 def reset_board():
     for row in range(3):
@@ -99,12 +112,13 @@ def update_display():
     #Setting background
     screen.blit(background, (0,0))
     draw_lines()
+    draw_counter()
     
     #Drawing current apple & sandwich icons
     for row in range(3):
         for col in range(3):
-            if board[row][col] == 1: screen.blit(sandwich, (BOX_SIZE * col + 20, BOX_SIZE * row + 20))
-            elif board[row][col] == 2: screen.blit(apple, (BOX_SIZE * col + 30, BOX_SIZE * row + 30))
+            if board[row][col] == 1: screen.blit(sandwich, (BOX_SIZE * col + 20, BOX_SIZE * row + COUNTER_HEIGHT + 20))
+            elif board[row][col] == 2: screen.blit(apple, (BOX_SIZE * col + 30, BOX_SIZE * row + COUNTER_HEIGHT + 30))
     
     #Did player 1 win?       
     check_win(1)
@@ -135,14 +149,16 @@ while running:
             running = False
             
         if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
-            clicked_row = int(event.pos[1] // BOX_SIZE)
-            clicked_col = int(event.pos[0] // BOX_SIZE)
+            clicked_row = int((event.pos[1] - COUNTER_HEIGHT)// BOX_SIZE)
+            clicked_col = int((event.pos[0])// BOX_SIZE)
             
             if available_square(clicked_row, clicked_col):
                 mark_square(clicked_row, clicked_col, player)
                 pop.play()
                 if check_win(player):
                     win.play()
+                    if player == 1: player1_wins += 1
+                    elif player == 2: player2_wins += 1    
                     game_over = True
                 player = 3 - player
                     
@@ -150,6 +166,6 @@ while running:
             if event.key == pygame.K_r:
                 click.play()
                 game_over = False
-                player = 1
+                #player = 1
                 reset_board()   
 pygame.quit()
